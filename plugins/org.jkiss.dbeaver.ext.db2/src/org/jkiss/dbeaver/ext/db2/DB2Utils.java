@@ -119,7 +119,7 @@ public class DB2Utils {
     // ------------------------
     // Generate DDL
     // ------------------------
-
+public static String generateDDLforTable(DBRProgressMonitor monitor, GenerateDDLParams params) throws DBException
     // DF: Use "Undocumented" SYSPROC.DB2LK_GENERATE_DDL stored proc
     // Ref to db2look :
     // http://pic.dhe.ibm.com/infocenter/db2luw/v10r5/topic/com.ibm.db2.luw.admin.cmd.doc/doc/r0002051.html
@@ -130,11 +130,11 @@ public class DB2Utils {
     public static String generateDDLforTable(DBRProgressMonitor monitor, String statementDelimiter, DB2DataSource dataSource,
         DB2Table db2Table, boolean includeViews) throws DBException
     {
-        LOG.debug("Generate DDL for " + db2Table.getFullyQualifiedName(DBPEvaluationContext.DDL));
+LOG.debug("Generate DDL for " + params.getDb2Table().getFullyQualifiedName(DBPEvaluationContext.DDL));
 
         // The DB2LK_GENERATE_DDL SP does not generate DDL for System Tables for some reason...
         // As a workaround, display a message to the end-user
-        if (db2Table.getSchema().isSystem()) {
+        if (params.getDb2Table().getSchema().isSystem()) {
             return DB2Messages.no_ddl_for_system_tables;
         }
 
@@ -145,7 +145,7 @@ public class DB2Utils {
         // to prevent the pairing from being evaluated word-by-word by the command line processor (CLP).
         // If you use only one set of double quotation marks (for example, "My Table"), all words are converted into uppercase,
         // and the db2look command looks for an uppercase table name (for example, MY TABLE).
-        if (db2Table.getFullyQualifiedName(DBPEvaluationContext.DDL).contains(" ")) {
+        if (params.getDb2Table().getFullyQualifiedName(DBPEvaluationContext.DDL).contains(" ")) {
             return DB2Messages.no_ddl_for_spaces_in_name;
         }
 
@@ -157,8 +157,8 @@ public class DB2Utils {
             (includeViews ? "" : "-noview ") + DB2LK_COMMAND,
             statementDelimiter,
             db2Table.getFullyQualifiedName(DBPEvaluationContext.DDL));
-
-        try (JDBCSession session = DBUtils.openMetaSession(monitor, dataSource, "Generate DDL")) {
+            params.getStatementDelimiter(),
+            params.getDb2Table().getFullyQualifiedName(DBPEvaluationContext.DDL));
             LOG.debug("Calling DB2LK_GENERATE_DDL with command : " + command);
 
             try (JDBCCallableStatement stmtSP = session.prepareCall(CALL_DB2LK_GEN)) {
